@@ -6,9 +6,6 @@ body {
     -moz-osx-font-smoothing: grayscale;
 }
 
-
-/* Custom animations */
-
 @keyframes fadeIn {
     from {
         opacity: 0;

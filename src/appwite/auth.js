@@ -51,7 +51,6 @@ export class AuthService {
 
             return { success: true, data: userData };
         } catch (error) {
-            // Clear everything if login fails to prevent junk data
             localStorage.clear();
             return { success: false, error: error.message };
         }

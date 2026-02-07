@@ -1,96 +1,71 @@
-import React, { useState, useEffect } from 'react';
+import  { useState, useEffect } from 'react';
 import { Controller } from 'react-hook-form';
 import { Editor } from '@tinymce/tinymce-react';
+import conf from '../conf/conf.js';
 
 export default function RTE({ label, name, control, defaultValue = "", error: fieldError }) {
     const [editorLoaded, setEditorLoaded] = useState(false);
     const [apiError, setApiError] = useState(null);
-    
-    const apiKey = import.meta.env.VITE_TINYMCE_API_KEY || "";
-
+   
+const  apiKey=conf.tinymceApiKey;
     useEffect(() => {
         const checkTinyMCE = () => {
             if (window.tinymce) {
-                console.log('TinyMCE global object found');
                 setEditorLoaded(true);
             } else {
-                console.log('TinyMCE not loaded yet');
                 setTimeout(() => {
-                    if (window.tinymce) {
-                        console.log('TinyMCE loaded after timeout');
-                        setEditorLoaded(true);
-                    } else {
-                        setApiError('TinyMCE failed to load. Check API key and network connection.');
-                    }
+                    if (window.tinymce) setEditorLoaded(true);
+                    else setApiError('CONNECTION ERROR: EDITOR FAILED TO INITIALIZE');
                 }, 3000);
             }
         };
-
         checkTinyMCE();
     }, []);
 
-    const TextareaFallback = ({ value, onChange, defaultValue }) => (
+    const TextareaFallback = ({ value, onChange }) => (
         <textarea
-            className="w-full h-64 p-3 border border-gray-300 rounded-lg bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Enter your content here..."
-            value={value || defaultValue}
+            className="w-full h-80 p-6 bg-white text-black font-mono text-sm focus:outline-none border-t-4 border-black"
+            placeholder="Type your story here..."
+            value={value}
             onChange={(e) => onChange(e.target.value)}
-            rows={10}
         />
     );
 
     return (
-        <div className='w-full mb-6'>
+        <div className='w-full mb-10'>
             {label && (
-                <label className='block mb-2 font-semibold text-gray-700 text-lg'>
-                    {label} <span className="text-red-500">*</span>
-                </label>
-            )}
-            
-            {fieldError && (
-                <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg">
-                    <p className="text-red-600 text-sm font-medium">⚠️ {fieldError.message || 'This field is required'}</p>
+                <div className="flex items-baseline gap-4 mb-4">
+                    <label className='text-xs font-black uppercase tracking-[0.3em] text-black'>
+                        {label}
+                    </label>
+                    <span className="h-px grow bg-zinc-200"></span>
                 </div>
             )}
             
-            {apiError && (
-                <div className="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <p className="text-yellow-700 text-sm">⚠️ {apiError}</p>
-                </div>
-            )}
-
             <Controller
                 name={name || "content"}
                 control={control}
                 defaultValue={defaultValue}
                 rules={{ 
-                    required: 'Content is required',
-                    validate: (value) => {
-                        if (!value || value.trim() === '' || value === '<p></p>') {
-                            return 'Content cannot be empty';
-                        }
-                        return true;
-                    }
+                    required: 'FIELD_REQUIRED',
+                    validate: (value) => (value?.trim() && value !== '<p></p>') || 'CONTENT_EMPTY'
                 }}
-                render={({ field: { onChange, value, onBlur }, fieldState: { error } }) => (
-                    <div className="border border-gray-300 rounded-lg overflow-hidden bg-white">
+                render={({ field: { onChange, value, onBlur } }) => (
+                    <div className={`border-4 transition-all duration-300 ${fieldError ? 'border-red-500 shadow-[8px_8px_0px_0px_rgba(239,68,68,1)]' : 'border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]'}`}>
+                        
                         {!editorLoaded && !apiError && (
-                            <div className="h-64 bg-gray-50 flex items-center justify-center">
+                            <div className="h-80 bg-zinc-50 flex items-center justify-center">
                                 <div className="text-center">
-                                    <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-                                    <p className="text-gray-600">Loading editor...</p>
+                                    <div className="w-10 h-10 border-4 border-black border-t-transparent animate-spin mx-auto mb-4"></div>
+                                    <p className="text-[10px] font-black tracking-widest uppercase">Show some Patience</p>
                                 </div>
                             </div>
                         )}
                         
                         {apiError && (
-                            <div className="p-2">
-                                <p className="text-sm text-gray-600 mb-2">Using basic text editor:</p>
-                                <TextareaFallback 
-                                    value={value} 
-                                    onChange={onChange}
-                                    defaultValue={defaultValue}
-                                />
+                            <div className="p-4 bg-zinc-100">
+                                <p className="text-[10px] font-black text-red-600 mb-4 uppercase tracking-tighter">⚠️ {apiError}</p>
+                                <TextareaFallback value={value} onChange={onChange} />
                             </div>
                         )}
                         
@@ -98,43 +73,26 @@ export default function RTE({ label, name, control, defaultValue = "", error: fi
                             <Editor
                                 apiKey={apiKey}
                                 value={value || defaultValue}
-                                onInit={(evt, editor) => {
-                                    console.log('TinyMCE Editor initialized');
-                                    setEditorLoaded(true);
-                                }}
                                 init={{
-                                    height: 400,
-                                    menubar: true,
-                                    plugins: [
-                                        'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
-                                        'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                                        'insertdatetime', 'media', 'table', 'code', 'help', 'wordcount'
-                                    ],
-                                    toolbar: 'undo redo | blocks | ' +
-                                        'bold italic forecolor | alignleft aligncenter ' +
-                                        'alignright alignjustify | bullist numlist outdent indent | ' +
-                                        'removeformat | help | link image | code',
-                                    content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }',
+                                    height: 450,
+                                    menubar: false,
+                                    plugins: ['advlist', 'autolink', 'lists', 'link', 'image', 'preview', 'code', 'wordcount'],
+                                    toolbar: 'undo redo | blocks | bold italic | alignleft aligncenter alignright | bullist numlist | code',
+                                    content_style: 'body { font-family:Inter,Arial,sans-serif; font-size:16px; line-height:1.6; color:#18181b }',
                                     branding: false,
                                     promotion: false,
-                                    placeholder: 'Write your content here...',
+                                    skin: "oxide",
                                     setup: (editor) => {
-                                        editor.on('blur', () => {
-                                            onBlur();
-                                        });
+                                        editor.on('blur', () => onBlur());
                                     }
                                 }}
-                                onEditorChange={(content) => {
-                                    onChange(content);
-                                }}
-                                onBlur={() => {
-                                    onBlur();
-                                }}
+                                onEditorChange={(content) => onChange(content)}
                             />
                         )}
                         
-                        <div className="px-3 py-2 bg-gray-50 border-t border-gray-200 text-xs text-gray-500">
-                            {value && value.replace(/<[^>]*>/g, '').length} characters
+                        <div className="flex justify-between items-center px-4 py-2 bg-black text-white text-[10px] font-mono uppercase tracking-widest">
+                            <span>{fieldError ? fieldError.message : 'System Ready'}</span>
+                            <span>{value?.replace(/<[^>]*>/g, '').length || 0} CHR</span>
                         </div>
                     </div>
                 )}

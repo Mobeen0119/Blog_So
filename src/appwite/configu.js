@@ -125,7 +125,6 @@ export class Service {
     }
 
     getfilePreview(fileId) {
-        // This is a synchronous method that returns a URL string
         return this.storage.getFilePreview(
             conf.appwriteBucketId,
             fileId

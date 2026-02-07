@@ -4,189 +4,104 @@ import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { Query } from 'appwrite';
 import service from '../appwite/configu';
-import { FiUser, FiEdit, FiFileText, FiTrendingUp } from 'react-icons/fi';
+import { FiPlus, FiLogOut, FiFileText } from 'react-icons/fi';
 
 export default function Profile() {
   const userData = useSelector((state) => state.auth.userData);
   const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [stats, setStats] = useState({ totalPosts: 0, activePosts: 0 });
+  const [stats, setStats] = useState({ total: 0 });
 
   useEffect(() => {
     if (userData) {
-      service.listPosts([Query.equal("userid", userData.$id)])
-        .then((response) => {
-          if (response && response.success) {
-            setPosts(response.data.documents);
-            // Calculate stats
-            const totalPosts = response.data.documents.length;
-            const activePosts = response.data.documents.filter(post => post.status === 'active').length;
-            setStats({ totalPosts, activePosts });
-          } else if (response && !response.success) {
-            setError(response.error);
-          }
-        })
-        .catch((error) => {
-          console.error("Error fetching user posts:", error);
-          setError("Failed to load your posts. Please try again later.");
-        })
-        .finally(() => {
-          setLoading(false);
-        });
-    } else {
-      setLoading(false);
+      service.listPosts([Query.equal("userid", userData.$id)]).then((res) => {
+        if (res?.success) {
+          setPosts(res.data.documents);
+          setStats({ total: res.data.documents.length });
+        }
+      });
     }
   }, [userData]);
 
-  if (loading) {
-    return (
-      <div className="py-8 w-full text-center mt-5 animate-fadeIn">
-        <Container>
-          <div className="flex flex-wrap justify-center">
-            <div className="p-2 w-full">
-              <div className="w-24 h-24 rounded-full bg-linear-to-r from-purple-500/20 to-pink-500/20 mx-auto mb-4 animate-pulse"></div>
-              <h1 className="font-bold text-3xl text-white animate-pulse">
-                Loading profile...
-              </h1>
-            </div>
-          </div>
-        </Container>
-      </div>
-    );
-  }
-
-  if (!userData) {
-    return (
-      <div className="py-8 animate-fadeIn">
-        <Container>
-          <div className="text-center p-8">
-            <h1 className="text-2xl font-bold text-white mb-4">Please login to view profile</h1>
-            <Link to="/login">
-              <Button className="bg-linear-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
-                Go to Login
-              </Button>
-            </Link>
-          </div>
-        </Container>
-      </div>
-    );
-  }
+  if (!userData) return null;
 
   return (
-    <div className="py-8 animate-fadeInUp">
+    <div className="min-h-screen bg-[#000000] text-white font-sans antialiased selection:bg-blue-500">
       <Container>
-        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between mb-8 p-6 bg-linear-to-r from-purple-900/30 to-pink-900/30 rounded-2xl backdrop-blur-sm border border-white/10 animate-slideInDown">
-          <div className="flex items-center space-x-4 mb-4 lg:mb-0">
-            <div className="w-20 h-20 rounded-full bg-linear-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-2xl font-bold shadow-lg animate-pulseHover">
-              {userData?.name?.charAt(0).toUpperCase() || 'U'}
-            </div>
-            <div>
-              <h1 className="font-bold text-3xl text-white animate-textGlow">
-                Welcome back, <span className="bg-linear-to-r from-yellow-300 to-orange-300 bg-clip-text text-transparent">{userData?.name || 'User'}</span>!
-              </h1>
-              <p className="text-white/80 mt-1">@{userData?.username || 'user'}</p>
+        
+        <nav className="flex justify-between items-center py-8 mb-10">
+          <button 
+            onClick={() => window.history.back()} 
+            className="text-xs font-black tracking-widest text-zinc-500 hover:text-white transition-colors uppercase"
+          >
+            ← Back to Feed
+          </button>
+          <div className="flex items-center gap-2 text-zinc-500">
+             <span className="text-xs font-mono uppercase">{userData.name}</span>
+             <FiLogOut className="w-4 h-4 cursor-pointer hover:text-red-500" />
+          </div>
+        </nav>
+
+        <header className="mb-20">
+          <p className="text-blue-500 font-black text-xs tracking-[.4em] mb-4 uppercase">Identity Profile</p>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
+            <h1 className="text-6xl md:text-8xl font-bold tracking-tighter italic">
+              {userData.name.split(' ')[0]}<span className="text-zinc-800">.</span>
+            </h1>
+            <div className="flex items-baseline gap-2">
+              <span className="text-5xl font-light">{stats.total}</span>
+              <span className="text-zinc-500 uppercase font-black text-[10px] tracking-widest">Total Posts</span>
             </div>
           </div>
+        </header>
+
+        <section className="grid grid-cols-1 lg:grid-cols-12 gap-12">
           
-          <div className="flex space-x-6">
-            <div className="text-center p-3 bg-white/5 rounded-xl backdrop-blur-sm border border-white/10 animate-fadeInUp animation-delay-100">
-              <FiFileText className="w-6 h-6 text-blue-300 mx-auto mb-1" />
-              <div className="text-2xl font-bold text-white">{stats.totalPosts}</div>
-              <div className="text-white/60 text-sm">Total Posts</div>
-            </div>
-            <div className="text-center p-3 bg-white/5 rounded-xl backdrop-blur-sm border border-white/10 animate-fadeInUp animation-delay-200">
-              <FiTrendingUp className="w-6 h-6 text-green-300 mx-auto mb-1" />
-              <div className="text-2xl font-bold text-white">{stats.activePosts}</div>
-              <div className="text-white/60 text-sm">Active</div>
-            </div>
-          </div>
-        </div>
-
-        {error && (
-          <div className="mb-6 p-4 bg-red-900/50 rounded-xl border border-red-400 backdrop-blur-sm animate-shake">
-            <p className="text-red-300">{error}</p>
-          </div>
-        )}
-
-        <div className="mb-8 animate-fadeInUp animation-delay-300">
-          <h2 className="text-xl font-bold text-white mb-4">Quick Actions</h2>
-          <div className="flex flex-wrap gap-3">
+          <div className="lg:col-span-4">
             <Link to="/create-post">
-              <Button className="bg-linear-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-black font-bold px-6 py-3 rounded-full shadow-lg transform hover:scale-105 transition-all duration-300">
-                <FiEdit className="inline mr-2" /> Create New Post
-              </Button>
-            </Link>
-            <Link to="/my-posts">
-              <Button variant="outline" className="border-white/30 hover:bg-white/10 px-6 py-3 rounded-full backdrop-blur-sm">
-                <FiFileText className="inline mr-2" /> View My Posts
-              </Button>
+              <button className="group w-full bg-blue-600 hover:bg-blue-500 text-white p-10 rounded-3xl flex flex-col justify-between h-[300px] transition-all duration-500 shadow-[0_20px_50px_rgba(37,99,235,0.2)]">
+                <FiPlus className="text-4xl group-hover:rotate-90 transition-transform duration-500" />
+                <div className="text-left">
+                  <p className="text-xl font-bold leading-tight">Create<br />New Post</p>
+                  <p className="text-blue-200 text-xs mt-2 font-medium">Share your thoughts with the world</p>
+                </div>
+              </button>
             </Link>
           </div>
-        </div>
 
-        <div className="animate-fadeInUp animation-delay-500">
-          <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
-            <FiFileText className="mr-3 text-blue-300" /> Your Recent Posts
-          </h2>
-          
-          {posts.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {posts.slice(0, 6).map((post, index) => (
-                <div 
-                  key={post.$id} 
-                  className="bg-linear-to-br from-white/5 to-transparent p-5 rounded-xl backdrop-blur-sm border border-white/10 hover:border-white/30 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
-                  style={{
-                    animationDelay: `${index * 100}ms`,
-                    animation: `slideInUp 0.5s ease-out ${index * 100}ms both`
-                  }}
-                >
-                  <div className="flex justify-between items-start mb-3">
-                    <h3 className="font-bold text-white text-lg truncate">{post.title}</h3>
-                    <span className={`px-2 py-1 text-xs rounded-full ${post.status === 'active' ? 'bg-green-500/20 text-green-300' : 'bg-yellow-500/20 text-yellow-300'}`}>
-                      {post.status}
-                    </span>
-                  </div>
-                  <p className="text-white/70 mb-4 line-clamp-2">
-                    {post.content?.replace(/<[^>]*>/g, '').substring(0, 120) || 'No content available'}...
-                  </p>
-                  <div className="flex justify-between items-center">
-                    <span className="text-white/50 text-sm">
-                      {new Date(post.$createdAt).toLocaleDateString()}
-                    </span>
-                    <Link 
-                      to={`/post/${post.$id}`} 
-                      className="text-yellow-300 hover:text-yellow-200 font-medium text-sm transition-all duration-300 hover:scale-105"
-                    >
-                      Read More →
-                    </Link>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12 bg-linear-to-br from-white/5 to-transparent rounded-2xl backdrop-blur-sm border border-white/10 animate-fadeIn">
-              <FiFileText className="w-16 h-16 text-white/30 mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-white mb-2">No Posts Yet</h3>
-              <p className="text-white/60 mb-6">Start sharing your thoughts with the community!</p>
-              <Link to="/create-post">
-                <Button className="bg-linear-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
-                  Create Your First Post
-                </Button>
-              </Link>
-            </div>
-          )}
-          
-          {posts.length > 6 && (
-            <div className="text-center mt-8">
-              <Link to="/my-posts">
-                <Button variant="outline" className="border-white/30 hover:bg-white/10">
-                  View All Posts ({posts.length})
-                </Button>
-              </Link>
-            </div>
-          )}
-        </div>
+          <div className="lg:col-span-8">
+            <h3 className="text-zinc-600 font-black text-[10px] tracking-[.3em] uppercase mb-8">Recent Archives</h3>
+            
+            {posts.length > 0 ? (
+              <div className="space-y-4">
+                {posts.map(post => (
+                  <Link 
+                    key={post.$id} 
+                    to={`/post/${post.$id}`} 
+                    className="flex items-center justify-between p-6 bg-zinc-900/40 border border-zinc-800 rounded-2xl hover:bg-zinc-900 transition-all group"
+                  >
+                    <div className="flex items-center gap-6">
+                      <div className="w-10 h-10 bg-zinc-800 rounded-full flex items-center justify-center group-hover:bg-blue-600 transition-colors">
+                        <FiFileText className="text-zinc-500 group-hover:text-white" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-white group-hover:text-blue-400 transition-colors">{post.title}</h4>
+                        <p className="text-xs text-zinc-600 mt-1">{new Date(post.$createdAt).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+                    <span className="text-zinc-700 font-black group-hover:text-white transition-colors">→</span>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+             
+              <div className="h-75 border-2 border-dashed border-zinc-800 rounded-3xl flex flex-col items-center justify-center text-zinc-700">
+                <FiFileText className="text-4xl mb-4 opacity-20" />
+                <p className="font-bold uppercase tracking-widest text-xs">No posts detected in database</p>
+              </div>
+            )}
+          </div>
+        </section>
+
       </Container>
     </div>
   );
