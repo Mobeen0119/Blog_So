@@ -16,7 +16,7 @@
 ---
 
 ## ⚡ Overview
-**BLOG_SO** is a modern content management platform designed with a focus on **Brutalist UI** principles. It moves away from the "soft" web, embracing sharp edges, massive typography, and high-contrast layouts. It provides a seamless pipeline for creators to publish, manage, and share artifacts.
+**BLOG_SO** is a modern content management platform designed". It provides a seamless pipeline for creators to publish, manage, and share artifacts.
 
 
 
