@@ -68,5 +68,3 @@ Media Pipeline: Automated image uploading to Appwrite Storage with a file-previe
 Secure Auth: Full session management including persistent login states via Redux.
 
 Rich Text Control: Integrated TinyMCE editor with fallback support for raw text entry.
-
-Responsive Grid: A fluid Masonry-inspired layout that adapts from mobile to ultrawide displays.
